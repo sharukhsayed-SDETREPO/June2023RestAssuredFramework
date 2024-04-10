@@ -31,9 +31,9 @@ public class APISchemaValidatortest extends BaseTest{
 		return data;
 	}
 	
-	@Description("This test validates schema")
+	@Description("This test validates schema for json")
 @Test(dataProvider = "createuserdata_exCELDATA")
-	
+	 
 	public void Createuser_Test_UserExcel_andvalidateJSONSCHEMAVALIDATOR(String name,String gender,String status) {
 	    User usr=   new User(name, StringUtils.generateRanddomeEmail(), gender, status);
 	//	RestClient	resclient1= new RestClient(prop, baseURI);
