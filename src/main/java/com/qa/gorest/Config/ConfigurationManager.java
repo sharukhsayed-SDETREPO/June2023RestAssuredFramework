@@ -35,7 +35,7 @@ public class ConfigurationManager {
 					path = "./src/test/resources/config/config.dev.properties";
 					break;
 				case "prod":
-					System.out.println("Running on Environment: ---->" + env);
+					System.out.println("Running on prod Environment: ---->" + env);
 					path = "./src/test/resources/config/config.properties";
 					break;
 				default:
