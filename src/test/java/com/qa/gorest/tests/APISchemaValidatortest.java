@@ -14,6 +14,8 @@ import com.qa.gorest.constants.APIHttpStatus;
 import com.qa.gorest.utils.Excel;
 import com.qa.gorest.utils.StringUtils;
 
+import io.qameta.allure.Description;
+
 public class APISchemaValidatortest extends BaseTest{
 
 	@BeforeMethod
@@ -29,7 +31,7 @@ public class APISchemaValidatortest extends BaseTest{
 		return data;
 	}
 	
-	
+	@Description("This test validates schema")
 @Test(dataProvider = "createuserdata_exCELDATA")
 	
 	public void Createuser_Test_UserExcel_andvalidateJSONSCHEMAVALIDATOR(String name,String gender,String status) {
