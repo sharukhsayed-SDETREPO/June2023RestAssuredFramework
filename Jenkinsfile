@@ -5,7 +5,12 @@ pipeline
     tools{
     	maven 'maven'
         }
- 
+        
+    environment{
+   
+        BUILD_NUMBER = "${BUILD_NUMBER}"
+   
+    }
     
 
     stages 
@@ -38,31 +43,30 @@ pipeline
              
                 
                 
-      stage('Regression API Automation test') {
+      stage('Run Docker Image with Regression Tests') {
     steps {
-             catchError(buildResult:'SUCCESS',stageResult:'FAILURE'){
-             git'https://github.com/sharukhsayed-SDETREPO/June2023RestAssuredFramework.git'
-             bat "mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testRunners/testNG_regression.xml"
-             
-             
+        script {
+            def suiteXmlFilePath = 'src/test/resources/testRunners/sanityregression.xml'
+            def dockerCommand = """
+                docker run --name apitesting${BUILD_NUMBER} \
+                -v "${WORKSPACE}/reports:/app/reports" \
+                sharukhsayed/apitest:latest \
+                /bin/bash -c "mvn test -Dsurefire.suiteXmlFiles=${suiteXmlFilePath}"
+            """
+            
+            def exitCode = bat(script: dockerCommand, returnStatus: true)
+            
+            if (exitCode != 0) {
+                currentBuild.result = 'FAILURE'
+            }
+            bat "docker start apitesting${BUILD_NUMBER}"
+            bat "docker cp apitesting${BUILD_NUMBER}:/app/target/APIExecutionReport.html ${WORKSPACE}/target"
+            bat "docker rm -f apitesting${BUILD_NUMBER}"
         }
     }
 }
 
-           
-stage('Publish Allure Reports regression') {
-           steps {
-                script {
-                    allure([
-                        includeProperties: false,
-                        jdk: '',
-                        properties: [],
-                        reportBuildPolicy: 'ALWAYS',
-                        results: [[path: '/allure-results']]
-                    ])
-                }
-            }
-        }
+
 
 		
 		stage('Publish Regression Extent Report'){
@@ -70,62 +74,16 @@ stage('Publish Allure Reports regression') {
                      publishHTML([allowMissing: false,
                                   alwaysLinkToLastBuild: false, 
                                   keepAll: false, 
-                                  reportDir: 'reports', 
+                                  reportDir: 'target', 
                                   reportFiles: 'APIExecutionReport.html', 
                                   reportName: 'API HTML Regression Extent Report', 
                                   reportTitles: ''])
             }
         }
         
-          stage("Deploy to STAGE"){
-            steps{
-                echo("deploy to STAGE done")
-            }
-        }
-            
-            
-               stage('Stage sanity test test') {
-    steps {
-             catchError(buildResult:'SUCCESS',stageResult:'FAILURE'){
-             git'https://github.com/sharukhsayed-SDETREPO/June2023RestAssuredFramework.git'
-             bat "mvn clean test -Dsurefire.suiteXmlFiles=src/test/resources/testRunners/sanityregression.xml"
-                      
-        }
-    }
-} 
-            
-           stage('Publish Allure Reports for Sanity') {
-           steps {
-                script {
-                    allure([
-                        includeProperties: false,
-                        jdk: '',
-                        properties: [],
-                        reportBuildPolicy: 'ALWAYS',
-                        results: [[path: '/allure-results']]
-                    ])
-                }
-            }
-        }
+        
+         
 
-		
-		stage('Publish  Extent Report for Sanity'){
-            steps{
-                     publishHTML([allowMissing: false,
-                                  alwaysLinkToLastBuild: false, 
-                                  keepAll: false, 
-                                  reportDir: 'reports', 
-                                  reportFiles: 'APIExecutionReport.html', 
-                                  reportName: 'API HTML Regression Extent Report', 
-                                  reportTitles: ''])
-            }
-        } 
-            
-            
-    stage("Deploy to PROD"){
-            steps{
-                echo("deploy to PROD")
-            }
-        }
+         
     }
 }
